@@ -1,4 +1,4 @@
-import { FC } from "react";
+import { FC, KeyboardEvent, useEffect, useState } from "react";
 import { StyledDropdown } from "./styles";
 
 interface IProps {
@@ -21,6 +21,42 @@ const Dropdown: FC<IProps> = ({
   dropdownBorderColor,
   dropdownHoverColor,
 }) => {
+  const [focusedIndex, setFocusedIndex] = useState<number>(0);
+
+  useEffect(() => {
+    const currentItem = document.querySelector(
+      `.react-search-box-dropdown-list-item:focus`
+    );
+    if (currentItem) {
+      currentItem.blur();
+    }
+    const nextItem = document.querySelectorAll(
+      `.react-search-box-dropdown-list-item`
+    )[focusedIndex];
+    if (nextItem) {
+      nextItem.focus();
+    }
+  }, [focusedIndex]);
+
+  const handleKeyDown = (e: KeyboardEvent) => {
+    switch (e.code) {
+      case "ArrowUp":
+        setFocusedIndex((prevIndex) =>
+          prevIndex > 0 ? prevIndex - 1 : matchedRecords.length - 1
+        );
+        break;
+      case "ArrowDown":
+        setFocusedIndex((prevIndex) => (prevIndex + 1) % matchedRecords.length);
+        break;
+      case "Space":
+      case "Enter":
+        onClick(matchedRecords[focusedIndex]);
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <StyledDropdown
       className="react-search-box-dropdown"
@@ -33,11 +69,7 @@ const Dropdown: FC<IProps> = ({
             <li
               key={record.item.key}
               tabIndex={0}
-              onKeyDown={(e) => {
-                if (["Space", "Enter"].includes(e.code)) {
-                  onClick(record);
-                }
-              }}
+              onKeyDown={handleKeyDown}
               className="react-search-box-dropdown-list-item"
               onClick={() => onClick(record)}
             >
